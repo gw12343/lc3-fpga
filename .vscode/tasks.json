@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Verilator: Run Active Testbench",
+            "type": "shell",
+            "command": "verilator --binary --timing -Wall -y . lc3_interface.sv ${file} --top-module ${fileBasenameNoExtension}",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Verilator: Run Active Testbench with Waveforms",
+            "type": "shell",
+            "command": "rm -f waves.vcd && verilator --timing --binary --trace -Wall -y . lc3_interface.sv ${file} --top-module ${fileBasenameNoExtension} && ./obj_dir/V${fileBasenameNoExtension} && code -r waves.vcd",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
