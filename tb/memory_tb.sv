@@ -50,7 +50,10 @@ module memory_tb;
         #10;
         rst_n = 1;
 
-        #30;
+        @(posedge sys_clk)
+        
+
+
 
         $monitor("ready: %d    val: %04h", ready, mdr_reg);
 

@@ -41,7 +41,6 @@ function control_state_t get_state_from_opcode(
         4'b0011: get_state_from_opcode = S_ST0;
         4'b1011: get_state_from_opcode = S_STI0;
         4'b0111: get_state_from_opcode = S_STR0;
-
         4'b1000: get_state_from_opcode = S_EXCEPTION; // RTI unimplemented for now
         4'b1101: get_state_from_opcode = S_EXCEPTION; // illegal opcode
     endcase
@@ -111,8 +110,97 @@ always_comb begin
     end else if (curr == S_FETCH2) begin
         ctrl_signal.load_ir = 1;
         ctrl_signal.store_mdr = 1;
+        ctrl_signal.mem_io_en = 1;
     end else if (curr == S_BEN) begin
         ctrl_signal.load_branch_en = 1;
+        ctrl_signal.mem_io_en = 1;
+    end else if (curr == S_AND) begin
+        ctrl_signal.load_reg = 1;
+        ctrl_signal.store_alu = 1;
+
+        //AND
+        ctrl_signal.alu_k = 2'b01;
+        ctrl_signal.load_flags = 1;
+    end else if (curr == S_ADD) begin
+        ctrl_signal.load_reg = 1;
+        ctrl_signal.store_alu = 1;
+
+        //ADD
+        ctrl_signal.alu_k = 2'b00;
+        ctrl_signal.load_flags = 1;
+    end else if (curr == S_NOT) begin
+        ctrl_signal.load_reg = 1;
+        ctrl_signal.store_alu = 1;
+
+        //NOT
+        ctrl_signal.alu_k = 2'b10;
+        ctrl_signal.load_flags = 1;
+    end else if (curr == S_TRAP0) begin
+        ctrl_signal.mar_mux = 0; // select ZEXT(IR[7:0])
+        ctrl_signal.store_mar_mux = 1;
+        ctrl_signal.load_mar = 1;
+    end else if (curr == S_TRAP1) begin
+        ctrl_signal.load_reg = 1;
+        ctrl_signal.store_pc = 1;
+        ctrl_signal.dr_mux = 2'b01; // r7
+
+        ctrl_signal.load_mdr = 1;
+        ctrl_signal.mem_io_en = 1;
+        ctrl_signal.mem_w_nr = 0;
+    end else if (curr == S_TRAP2) begin
+        ctrl_signal.load_pc = 1;
+        ctrl_signal.store_mdr = 1;
+        ctrl_signal.pc_mux = 2'b01;
+    end else if (curr == S_LEA) begin
+        ctrl_signal.load_reg = 1;
+        ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+        ctrl_signal.addr1_mux = 1'b0;   // pc
+        ctrl_signal.mar_mux = 1'b1;
+
+        ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
+
+        ctrl_signal.load_flags = 1;
+    end else if (curr == S_LD0) begin
+        ctrl_signal.load_mar = 1;
+        ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+        ctrl_signal.addr1_mux = 1'b0;   // pc
+        ctrl_signal.mar_mux = 1'b1;
+        ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
+    end else if (curr == S_LCOMMON0) begin
+        ctrl_signal.load_mdr = 1;
+        ctrl_signal.mem_io_en = 1;
+        ctrl_signal.mem_w_nr = 0;
+    end else if (curr == S_LCOMMON1) begin
+        ctrl_signal.load_reg = 1;
+        ctrl_signal.store_mdr = 1;
+        ctrl_signal.load_flags = 1;
+    end
+
+
+    else if (curr == S_LDR0) begin
+        ctrl_signal.load_mar = 1;
+        ctrl_signal.store_mar_mux = 1; 
+
+        ctrl_signal.addr2_mux = 2'b01;  // 6 bit sext
+        ctrl_signal.addr1_mux = 1'b1;   // B
+        ctrl_signal.mar_mux = 1'b1;     // 6 bit sext + B
+
+        ctrl_signal.sr1_mux = 2'b01;
+    end
+
+    else if (curr == S_LDI0) begin
+        ctrl_signal.load_mar = 1;
+        ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+        ctrl_signal.addr1_mux = 1'b0;   // pc
+        ctrl_signal.mar_mux = 1'b1;
+        ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
+    end else if (curr == S_LDI1) begin
+        ctrl_signal.load_mdr = 1;
+        ctrl_signal.mem_io_en = 1;
+        ctrl_signal.mem_w_nr = 0;
+    end else if (curr == S_LDI2) begin
+        ctrl_signal.store_mdr = 1;
+        ctrl_signal.load_mar = 1;
     end
     
 end

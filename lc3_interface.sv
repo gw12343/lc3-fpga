@@ -33,6 +33,8 @@ typedef struct packed {
 } control_interface_t;
 
 
+
+
 typedef enum logic [5:0] {
     S_FETCH0, S_FETCH1, S_FETCH2,
     S_BEN,
@@ -46,13 +48,13 @@ typedef enum logic [5:0] {
     S_LEA,
 
     // related load instructions
-    S_LD0,
-    S_LDR0,
+    S_LD0,  //b
+    S_LDR0, //c
     S_LDI0,
     S_LDI1,
     S_LDI2,
-    S_LCOMMON0,
-    S_LCOMMON1,
+    S_LCOMMON0, //10
+    S_LCOMMON1, //11
 
     // related store instructions
     S_STI0,

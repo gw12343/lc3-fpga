@@ -19,7 +19,12 @@ module lc3
 
 // ============================ Interconnect Signals =============================
 
-tri [BUS_WIDTH-1:0] bus;
+`ifdef VERILATOR
+    logic [BUS_WIDTH-1:0] bus;
+`else
+    tri [BUS_WIDTH-1:0] bus;
+`endif
+
 control_interface_t control;
 
 // Signals buffered to bus
@@ -108,7 +113,7 @@ end
 
 // register file source 1 reg select mux
 always_comb begin
-    case (control.dr_mux)
+    case (control.sr1_mux)
         2'b00: SR1_MUX_OUT = IR_DR;
         2'b01: SR1_MUX_OUT = IR_SR;
         2'b10: SR1_MUX_OUT = 3'b110;
@@ -119,26 +124,39 @@ end
 
 // ==================================== Modules ====================================
 
-bus_gate gate_mar_mux (
-    .assert_val(control.store_mar_mux),
-    .data      (mar_mux_out),
-    .bus       (bus)
-);
-bus_gate gate_pc (
-    .assert_val(control.store_pc),
-    .data      (pc_value),
-    .bus       (bus)
-);
-bus_gate gate_alu (
-    .assert_val(control.store_alu),
-    .data      ($unsigned(alu_value)),
-    .bus       (bus)
-);
-bus_gate gate_mdr (
-    .assert_val(control.store_mdr),
-    .data      (mdr_val),
-    .bus       (bus)
-);
+
+
+`ifdef VERILATOR
+    // Multiplex bus instead of use tristate buffers for simulation
+    always_comb begin
+        bus = '0;
+        if (control.store_mar_mux) bus |= mar_mux_out;
+        if (control.store_pc)      bus |= pc_value;
+        if (control.store_alu)     bus |= $unsigned(alu_value);
+        if (control.store_mdr)     bus |= mdr_val;
+    end
+`else
+    bus_gate gate_mar_mux (
+        .assert_val(control.store_mar_mux),
+        .data      (mar_mux_out),
+        .bus       (bus)
+    );
+    bus_gate gate_pc (
+        .assert_val(control.store_pc),
+        .data      (pc_value),
+        .bus       (bus)
+    );
+    bus_gate gate_alu (
+        .assert_val(control.store_alu),
+        .data      ($unsigned(alu_value)),
+        .bus       (bus)
+    );
+    bus_gate gate_mdr (
+        .assert_val(control.store_mdr),
+        .data      (mdr_val),
+        .bus       (bus)
+    );
+`endif
 
 
 control_fsm control_fsm (
@@ -150,7 +168,6 @@ control_fsm control_fsm (
     .branch_en  (branch_en),
     .ctrl_signal(control)
 );
-
 
 mio_controller mio (
     .sys_clk   (sys_clk),

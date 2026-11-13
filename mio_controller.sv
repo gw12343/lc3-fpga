@@ -27,7 +27,7 @@ module mio_controller #(
 
 
 typedef enum logic [1:0] { 
-    S_OFF, S_READY, S_BEGIN_READ, S_BEGIN_WRITE
+    S_IDLE, S_BEGIN_READ, S_BEGIN_WRITE, S_READY
 } mem_state_t;
 
 
@@ -38,7 +38,7 @@ logic [DATA_SIZE-1:0] ram_out;
 logic [ADDRESS_SIZE-1:0] mar_reg;
 logic [DATA_SIZE-1:0] mdr_mux_out;
 
-mem_state_t curr_state = S_OFF;
+mem_state_t curr_state = S_IDLE;
 mem_state_t next_state;
 
 always_comb begin
@@ -52,10 +52,9 @@ end
 // Next state combanatoric logic
 always_comb begin
     unique case (curr_state)
-        S_OFF:  next_state = mio_enable ? S_READY : S_OFF;
-        S_READY: 
+        S_IDLE: 
             if(!mio_enable) begin
-                next_state = S_OFF;
+                next_state = S_IDLE;
             end else begin
                 if(w_nr) begin
                     next_state = S_BEGIN_WRITE;
@@ -63,8 +62,9 @@ always_comb begin
                     next_state = S_BEGIN_READ;
                 end
             end
-        S_BEGIN_READ: next_state = S_OFF;
-        S_BEGIN_WRITE: next_state = S_OFF;
+        S_BEGIN_READ: next_state = S_READY;
+        S_BEGIN_WRITE: next_state = S_READY;
+        S_READY: next_state = S_IDLE;
     endcase
 
     ready = curr_state == S_READY;
@@ -75,7 +75,7 @@ always_ff @(posedge sys_clk or negedge rst_n) begin
     if(!rst_n) begin
         mdr_reg <= '0;
         mar_reg <= '0;
-        curr_state <= S_OFF;
+        curr_state <= S_IDLE;
     end else begin
 
         if(curr_state == S_BEGIN_WRITE) begin
