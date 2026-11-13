@@ -5,10 +5,10 @@
 
 
 
-module alu_tb;
+module alu_tb import lc3_interface::*; ();
 
 logic signed [15:0] a, b, out;
-logic [1:0] op;
+alu_op_k op;
 
 
 alu DUT(
@@ -20,7 +20,7 @@ alu DUT(
 
 
 task automatic test_add;
-    op = 2'b00;
+    op = OP_ADD;
     for(int i = 0; i < 10000; i ++) begin
         shortint x = 16'($random());
         shortint y = 16'($random());
@@ -32,7 +32,7 @@ task automatic test_add;
 endtask
 
 task automatic test_and;
-    op = 2'b01;
+    op = OP_AND;
     for(int i = 0; i < 10000; i ++) begin
         shortint x = 16'($random());
         shortint y = 16'($random());
@@ -44,7 +44,7 @@ task automatic test_and;
 endtask
 
 task automatic test_not;
-    op = 2'b10;
+    op = OP_NOT;
     for(int i = 0; i < 10000; i ++) begin
         shortint x = 16'($random());
         shortint y = 16'($random());
@@ -57,7 +57,7 @@ endtask
 
 
 task automatic test_pass;
-    op = 2'b11;
+    op = OP_PASS_A;
     for(int i = 0; i < 10000; i ++) begin
         shortint x = 16'($random());
         shortint y = 16'($random());
@@ -79,7 +79,7 @@ initial begin
 
     a = 0;
     b = 0;
-    op = 2'b00;
+    op = OP_ADD;
 
     test_add();
     test_and();

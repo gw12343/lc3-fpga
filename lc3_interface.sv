@@ -5,6 +5,13 @@
 
 package lc3_interface;
     
+typedef enum logic[1:0] {
+    OP_ADD = 2'b00,
+    OP_AND = 2'b01,
+    OP_NOT = 2'b10,
+    OP_PASS_A = 2'b11
+} alu_op_k;
+
 typedef struct packed {
     logic       load_mar;
     logic       load_mdr;
@@ -28,11 +35,9 @@ typedef struct packed {
     logic       mem_io_en;
     logic       mem_w_nr;
 
-    logic[1:0]  alu_k;
+    alu_op_k  alu_k;
     logic[1:0]  dr_mux;
 } control_interface_t;
-
-
 
 
 typedef enum logic [5:0] {
@@ -78,5 +83,6 @@ typedef enum logic [5:0] {
 
     S_EXCEPTION
 } control_state_t;
+
 
 endpackage : lc3_interface

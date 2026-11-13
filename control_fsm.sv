@@ -119,21 +119,21 @@ always_comb begin
         ctrl_signal.store_alu = 1;
 
         //AND
-        ctrl_signal.alu_k = 2'b01;
+        ctrl_signal.alu_k = OP_AND;
         ctrl_signal.load_flags = 1;
     end else if (curr == S_ADD) begin
         ctrl_signal.load_reg = 1;
         ctrl_signal.store_alu = 1;
 
         //ADD
-        ctrl_signal.alu_k = 2'b00;
+        ctrl_signal.alu_k = OP_ADD;
         ctrl_signal.load_flags = 1;
     end else if (curr == S_NOT) begin
         ctrl_signal.load_reg = 1;
         ctrl_signal.store_alu = 1;
 
         //NOT
-        ctrl_signal.alu_k = 2'b10;
+        ctrl_signal.alu_k = OP_NOT;
         ctrl_signal.load_flags = 1;
     end else if (curr == S_TRAP0) begin
         ctrl_signal.mar_mux = 0; // select ZEXT(IR[7:0])
@@ -201,6 +201,21 @@ always_comb begin
     end else if (curr == S_LDI2) begin
         ctrl_signal.store_mdr = 1;
         ctrl_signal.load_mar = 1;
+    end
+
+    else if (curr == S_ST0) begin
+        ctrl_signal.load_mar = 1;
+        ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+        ctrl_signal.addr1_mux = 1'b0;   // pc
+        ctrl_signal.mar_mux = 1'b1;
+        ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
+    end else if( curr == S_SCOMMON0) begin
+        ctrl_signal.load_mdr = 1;
+        ctrl_signal.alu_k = OP_PASS_A;
+        ctrl_signal.store_alu = 1;
+    end else if (curr == S_SCOMMON1) begin
+        ctrl_signal.mem_io_en = 1;
+        ctrl_signal.mem_w_nr = 1;
     end
     
 end

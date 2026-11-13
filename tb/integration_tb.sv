@@ -36,6 +36,9 @@ module integration_tb;
         assert (gate_mar == gate_mar);
     end
 
+    logic [15:0] read_val;
+    assign read_val = DUT.mio.ram['h3070];
+
     initial begin
         sys_clk = 0;
         rst_n = 0;
@@ -46,8 +49,12 @@ module integration_tb;
         else   $finish();
         assert (load_pc == load_pc) 
         else   $finish();
+        assert (read_val == read_val) 
+        else   $finish();
     end
 
+
+ 
 
     initial begin
         
@@ -57,7 +64,7 @@ module integration_tb;
         DUT.pc.PC_OUT = 16'h3000;
 
         DUT.rb.bank[0] = 1;
-        DUT.rb.bank[1] = 2;
+        DUT.rb.bank[1] = 'h11a3;
         DUT.rb.bank[2] = 3;
         DUT.rb.bank[3] = 4;
 
@@ -67,16 +74,18 @@ module integration_tb;
         end
 
         // Test program 
-        DUT.mio.ram['h3000] = 'h202F; // LD  R0, x3030     ; R0 = mem[x3030] = x3040
-        DUT.mio.ram['h3001] = 'h6202; // LDR R1, R0, #2    ; R1 = mem[R0 + 2] = mem[x3042]
-        DUT.mio.ram['h3002] = 'hA44D; // LDI R2, x3050     ; R2 = mem[mem[x3050]]
-        DUT.mio.ram['h3003] = 'hF025; // HALT (TRAP x25)
+        // DUT.mio.ram['h3000] = 'h202F; // LD  R0, x3030     ; R0 = mem[x3030] = x3040
+        // DUT.mio.ram['h3001] = 'h6202; // LDR R1, R0, #2    ; R1 = mem[R0 + 2] = mem[x3042]
+        // DUT.mio.ram['h3002] = 'hA44D; // LDI R2, x3050     ; R2 = mem[mem[x3050]]
+        // DUT.mio.ram['h3003] = 'hF025; // HALT (TRAP x25)
 
-        DUT.mio.ram['h3030] = 'h3040; // pointer for R0
-        DUT.mio.ram['h3042] = 'hBEEF; // data for LDR
-        DUT.mio.ram['h3050] = 'h3060; // LDI pointer (address of the data)
-        DUT.mio.ram['h3060] = 'hCAFE; // LDI data
+        // DUT.mio.ram['h3030] = 'h3040; // pointer for R0
+        // DUT.mio.ram['h3042] = 'hBEEF; // data for LDR
+        // DUT.mio.ram['h3050] = 'h3060; // LDI pointer (address of the data)
+        // DUT.mio.ram['h3060] = 'hCAFE; // LDI data
+        // DUT.mio.ram['h3070] = 'hfafe;  // test
 
+        DUT.mio.ram['h3000] = 'h326F; // ST r1 , pc + x6f
         
 
 
