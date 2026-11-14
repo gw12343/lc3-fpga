@@ -26,8 +26,8 @@ module mio_controller #(
 );
 
 
-typedef enum logic [1:0] { 
-    S_IDLE, S_BEGIN_READ, S_BEGIN_WRITE, S_READY
+typedef enum { 
+    S_IDLE, S_BEGIN_READ, S_BEGIN_WRITE, S_DELAY, S_READY
 } mem_state_t;
 
 
@@ -62,8 +62,9 @@ always_comb begin
                     next_state = S_BEGIN_READ;
                 end
             end
-        S_BEGIN_READ: next_state = S_READY;
-        S_BEGIN_WRITE: next_state = S_READY;
+        S_BEGIN_READ: next_state = S_DELAY;
+        S_BEGIN_WRITE: next_state = S_DELAY;
+        S_DELAY: next_state = S_READY;
         S_READY: next_state = S_IDLE;
     endcase
 
@@ -86,7 +87,7 @@ always_ff @(posedge sys_clk or negedge rst_n) begin
         end
         
 
-        if (load_mdr && ready) begin
+        if (load_mdr && (!mio_enable || ready)) begin
             mdr_reg <= mdr_mux_out;
         end
 

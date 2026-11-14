@@ -95,132 +95,173 @@ always_comb begin
     endcase
 end
 
+// Possible locations to store output of an ALU operation
+typedef enum {
+    DEST_REG, DEST_PC, DEST_MDR, DEST_MAR
+} alu_dest_t;
+
+// Ranges possible for sr1 from the instruction;
+// either IR[8:6] or IR[11:9] depending on the instruction
+typedef enum { 
+    SOURCE_IR8_6,
+    SOURCE_IR11_9
+} alu_source_range_t;
+
+
+function void read_mem;
+    // MDR <== M[MAR]
+    ctrl_signal.load_mdr = 1;
+    ctrl_signal.mem_io_en = 1;
+    ctrl_signal.mem_w_nr = 0; // read
+endfunction
+
+function void update_flags;
+    ctrl_signal.load_flags = 1;
+endfunction
+
+
+function void alu_op(alu_op_k op, alu_source_range_t sr1, alu_dest_t dest, logic up_flags);
+    // Select correct load location
+    unique case(dest)
+        DEST_REG: ctrl_signal.load_reg = 1;
+        DEST_PC:  begin 
+            ctrl_signal.load_pc = 1; 
+            ctrl_signal.pc_mux = 2'b01;
+        end
+        DEST_MDR: ctrl_signal.load_mdr = 1;
+        DEST_MAR: ctrl_signal.load_mar = 1;
+    endcase
+
+
+    ctrl_signal.store_alu = 1;
+    ctrl_signal.sr1_mux = (sr1 == SOURCE_IR8_6) ? 2'b01 : 2'b00;
+    ctrl_signal.alu_k = op;
+    ctrl_signal.load_flags = up_flags;
+
+endfunction
+
+
 always_comb begin
     ctrl_signal = '0;
 
-    if(curr == S_FETCH0) begin
-        ctrl_signal.load_mar = 1;
-        ctrl_signal.store_pc = 1;
-        ctrl_signal.pc_mux = 0;
-        ctrl_signal.load_pc = 1;
-    end else if (curr == S_FETCH1) begin
-        ctrl_signal.load_mdr = 1;
-        ctrl_signal.mem_io_en = 1;
-        ctrl_signal.mem_w_nr = 0; // read
-    end else if (curr == S_FETCH2) begin
-        ctrl_signal.load_ir = 1;
-        ctrl_signal.store_mdr = 1;
-        ctrl_signal.mem_io_en = 1;
-    end else if (curr == S_BEN) begin
-        ctrl_signal.load_branch_en = 1;
-        ctrl_signal.mem_io_en = 1;
-    end else if (curr == S_AND) begin
-        ctrl_signal.load_reg = 1;
-        ctrl_signal.store_alu = 1;
+    unique case(curr)
+        S_FETCH0: begin
+            ctrl_signal.load_mar = 1;
+            ctrl_signal.store_pc = 1;
+            ctrl_signal.pc_mux = 0;
+            ctrl_signal.load_pc = 1;
+        end
+        S_FETCH1: read_mem();
+        S_FETCH2: begin
+            ctrl_signal.load_ir = 1;
+            ctrl_signal.store_mdr = 1;
+        end
+        S_BEN: ctrl_signal.load_branch_en = 1;
+        S_AND: alu_op(OP_AND, SOURCE_IR8_6, DEST_REG, 1);
+        S_ADD: alu_op(OP_ADD, SOURCE_IR8_6, DEST_REG, 1);
+        S_NOT: alu_op(OP_NOT, SOURCE_IR8_6, DEST_REG, 1);
+        S_TRAP0: begin
+            ctrl_signal.mar_mux = 0; // select ZEXT(IR[7:0])
+            ctrl_signal.store_mar_mux = 1;
+            ctrl_signal.load_mar = 1;
+        end
+        S_TRAP1: begin
+            ctrl_signal.load_reg = 1;
+            ctrl_signal.store_pc = 1;
+            ctrl_signal.dr_mux = 2'b01; // r7
 
-        //AND
-        ctrl_signal.alu_k = OP_AND;
-        ctrl_signal.load_flags = 1;
-    end else if (curr == S_ADD) begin
-        ctrl_signal.load_reg = 1;
-        ctrl_signal.store_alu = 1;
+            read_mem();
+        end
+        S_TRAP2: begin
+            ctrl_signal.load_pc = 1;
+            ctrl_signal.store_mdr = 1;
+            ctrl_signal.pc_mux = 2'b01;
+        end
+        S_LEA: begin
+            ctrl_signal.load_reg = 1;
+            ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+            ctrl_signal.addr1_mux = 1'b0;   // pc
+            ctrl_signal.mar_mux = 1'b1;
 
-        //ADD
-        ctrl_signal.alu_k = OP_ADD;
-        ctrl_signal.load_flags = 1;
-    end else if (curr == S_NOT) begin
-        ctrl_signal.load_reg = 1;
-        ctrl_signal.store_alu = 1;
+            ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
 
-        //NOT
-        ctrl_signal.alu_k = OP_NOT;
-        ctrl_signal.load_flags = 1;
-    end else if (curr == S_TRAP0) begin
-        ctrl_signal.mar_mux = 0; // select ZEXT(IR[7:0])
-        ctrl_signal.store_mar_mux = 1;
-        ctrl_signal.load_mar = 1;
-    end else if (curr == S_TRAP1) begin
-        ctrl_signal.load_reg = 1;
-        ctrl_signal.store_pc = 1;
-        ctrl_signal.dr_mux = 2'b01; // r7
+            update_flags();
+        end
+        S_LD0: begin
+            ctrl_signal.load_mar = 1;
+            ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+            ctrl_signal.addr1_mux = 1'b0;   // pc
+            ctrl_signal.mar_mux = 1'b1;
+            ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
+        end
+        S_LCOMMON0: read_mem();
+        S_LCOMMON1: begin
+            ctrl_signal.load_reg = 1;
+            ctrl_signal.store_mdr = 1;
+            update_flags();
+        end
 
-        ctrl_signal.load_mdr = 1;
-        ctrl_signal.mem_io_en = 1;
-        ctrl_signal.mem_w_nr = 0;
-    end else if (curr == S_TRAP2) begin
-        ctrl_signal.load_pc = 1;
-        ctrl_signal.store_mdr = 1;
-        ctrl_signal.pc_mux = 2'b01;
-    end else if (curr == S_LEA) begin
-        ctrl_signal.load_reg = 1;
-        ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
-        ctrl_signal.addr1_mux = 1'b0;   // pc
-        ctrl_signal.mar_mux = 1'b1;
+        S_LDR0, S_STR0: begin
+            ctrl_signal.load_mar = 1;
+            ctrl_signal.store_mar_mux = 1; 
 
-        ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
+            ctrl_signal.addr2_mux = 2'b01;  // 6 bit sext
+            ctrl_signal.addr1_mux = 1'b1;   // B
+            ctrl_signal.mar_mux = 1'b1;     // 6 bit sext + B
 
-        ctrl_signal.load_flags = 1;
-    end else if (curr == S_LD0) begin
-        ctrl_signal.load_mar = 1;
-        ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
-        ctrl_signal.addr1_mux = 1'b0;   // pc
-        ctrl_signal.mar_mux = 1'b1;
-        ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
-    end else if (curr == S_LCOMMON0) begin
-        ctrl_signal.load_mdr = 1;
-        ctrl_signal.mem_io_en = 1;
-        ctrl_signal.mem_w_nr = 0;
-    end else if (curr == S_LCOMMON1) begin
-        ctrl_signal.load_reg = 1;
-        ctrl_signal.store_mdr = 1;
-        ctrl_signal.load_flags = 1;
-    end
-
-
-    else if (curr == S_LDR0) begin
-        ctrl_signal.load_mar = 1;
-        ctrl_signal.store_mar_mux = 1; 
-
-        ctrl_signal.addr2_mux = 2'b01;  // 6 bit sext
-        ctrl_signal.addr1_mux = 1'b1;   // B
-        ctrl_signal.mar_mux = 1'b1;     // 6 bit sext + B
-
-        ctrl_signal.sr1_mux = 2'b01;
-    end
-
-    else if (curr == S_LDI0) begin
-        ctrl_signal.load_mar = 1;
-        ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
-        ctrl_signal.addr1_mux = 1'b0;   // pc
-        ctrl_signal.mar_mux = 1'b1;
-        ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
-    end else if (curr == S_LDI1) begin
-        ctrl_signal.load_mdr = 1;
-        ctrl_signal.mem_io_en = 1;
-        ctrl_signal.mem_w_nr = 0;
-    end else if (curr == S_LDI2) begin
-        ctrl_signal.store_mdr = 1;
-        ctrl_signal.load_mar = 1;
-    end
-
-    else if (curr == S_ST0) begin
-        ctrl_signal.load_mar = 1;
-        ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
-        ctrl_signal.addr1_mux = 1'b0;   // pc
-        ctrl_signal.mar_mux = 1'b1;
-        ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
-    end else if( curr == S_SCOMMON0) begin
-        ctrl_signal.load_mdr = 1;
-        ctrl_signal.alu_k = OP_PASS_A;
-        ctrl_signal.store_alu = 1;
-    end else if (curr == S_SCOMMON1) begin
-        ctrl_signal.mem_io_en = 1;
-        ctrl_signal.mem_w_nr = 1;
-    end
-    
+            ctrl_signal.sr1_mux = 2'b01;
+        end
+        S_LDI0, S_STI0: begin
+            ctrl_signal.load_mar = 1;
+            ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+            ctrl_signal.addr1_mux = 1'b0;   // pc
+            ctrl_signal.mar_mux = 1'b1;
+            ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
+        end
+        S_LDI1, S_STI1: read_mem();
+        S_LDI2, S_STI2: begin
+            ctrl_signal.store_mdr = 1;
+            ctrl_signal.load_mar = 1;
+        end
+        S_ST0: begin
+            ctrl_signal.load_mar = 1;
+            ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+            ctrl_signal.addr1_mux = 1'b0;   // pc
+            ctrl_signal.mar_mux = 1'b1;
+            ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
+        end
+        S_SCOMMON0: alu_op(OP_PASS_A, SOURCE_IR11_9, DEST_MDR, 0);
+        S_SCOMMON1: begin
+            ctrl_signal.mem_io_en = 1;
+            ctrl_signal.mem_w_nr = 1;
+        end
+        S_JSR0: begin
+            ctrl_signal.load_reg = 1;
+            ctrl_signal.dr_mux = 2'b01; //r7
+            ctrl_signal.store_pc = 1;
+        end
+        S_JSR1_BRANCH: begin
+            ctrl_signal.load_pc = 1;
+            ctrl_signal.addr2_mux = 2'b11; // IR[10:0] SEXT
+            ctrl_signal.addr1_mux = 0;     // PC
+            ctrl_signal.pc_mux = 2'b10;
+        end
+        S_JMP, S_JSR1_BASE: begin
+            alu_op(OP_PASS_A, SOURCE_IR8_6, DEST_PC, 0);
+        end
+        S_BR0, S_EXCEPTION: ctrl_signal = '0;
+        S_BR1: begin
+            ctrl_signal.load_pc = 1;
+            ctrl_signal.pc_mux = 2'b10; // sum
+            ctrl_signal.addr2_mux = 2'b10; // IR[8:0]
+            ctrl_signal.addr1_mux = 1'b0; // PC
+        end
+        
+    endcase   
 end
 
-//
+
+// Go to next state
 always_ff @(posedge sys_clk or negedge rst_n) begin
     if(!rst_n) begin
         curr <= S_FETCH0;
