@@ -27,7 +27,7 @@ module mio_controller #(
 
 
 typedef enum { 
-    S_IDLE, S_BEGIN_READ, S_BEGIN_WRITE, S_DELAY, S_READY
+    S_IDLE, S_BEGIN_READ, S_BEGIN_WRITE, S_READY
 } mem_state_t;
 
 
@@ -62,9 +62,8 @@ always_comb begin
                     next_state = S_BEGIN_READ;
                 end
             end
-        S_BEGIN_READ: next_state = S_DELAY;
-        S_BEGIN_WRITE: next_state = S_DELAY;
-        S_DELAY: next_state = S_READY;
+        S_BEGIN_READ: next_state = S_READY;
+        S_BEGIN_WRITE: next_state = S_READY;
         S_READY: next_state = S_IDLE;
     endcase
 

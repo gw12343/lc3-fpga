@@ -11,10 +11,10 @@ module lc3
 )
 (
     input logic sys_clk,
-    input logic rst_n,
+    input logic rst_n//,
 
-    output logic[8:0] unused,
-    output logic[1:0] unused2
+   // output logic[8:0] unused//,
+   // output logic[1:0] unused2
 );
 
 // ============================ Interconnect Signals =============================
@@ -29,13 +29,15 @@ control_interface_t control;
 
 // Signals buffered to bus
 logic signed [BUS_WIDTH-1:0] alu_value;
-logic [BUS_WIDTH-1:0] ir_value;
+//logic [BUS_WIDTH-1:BUS_WIDTH-7] ir_value; // contains opcode and next 3 nzp bits
+logic [3:0] opcode;
+logic [2:0] nzp;
+
 logic [ADDRESS_SIZE-1:0] pc_value;
 logic [ADDRESS_SIZE-1:0] mar_mux_out;
 logic[BUS_WIDTH-1:0] mdr_val;
 
-assign unused = ir_value[8:0];
-assign unused2 = control[7:6];
+//assign unused = ir_value[8:0];
 
 // Misc Signals
 logic SR2_MUX;
@@ -162,8 +164,8 @@ end
 control_fsm control_fsm (
     .sys_clk    (sys_clk),
     .rst_n      (rst_n),
-    .addr_mode_op (ir_value[11]),
-    .opcode       (ir_value[BUS_WIDTH-1:BUS_WIDTH-4]),
+    .addr_mode_op (nzp[2]),
+    .opcode       (opcode),
     .mem_ready  (mem_ready),
     .branch_en  (branch_en),
     .ctrl_signal(control)
@@ -196,7 +198,8 @@ instruction_reg ir (
     .load_ir         (control.load_ir),
     .address_2_mux   (control.addr2_mux),
     .DATA_BUS_IN     (bus),
-    .IR_OUT          (ir_value),
+    .OPCODE_OUT          (opcode),
+    .NZP_OUT            (nzp),
     .ADDRESS2MUX_OUT (ADDRESS2MUX_OUT),
     .TRAP_VEC        (TRAP_VEC),
     .IR_IMMEDIATE_VALUE (IR_IMMEDIATE_VALUE),
@@ -246,7 +249,7 @@ branch_controller branch_controller (
     .N_FLAG   (N_FLAG),
     .Z_FLAG   (Z_FLAG),
     .P_FLAG   (P_FLAG),
-    .ir_out   (ir_value[11:9]),
+    .ir_out   (nzp),
     .load_be  (control.load_branch_en),
     .branch_en(branch_en)
 );

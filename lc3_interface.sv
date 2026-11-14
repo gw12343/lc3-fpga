@@ -41,47 +41,49 @@ typedef struct packed {
 
 
 typedef enum logic [5:0] {
-    S_FETCH0, S_FETCH1, S_FETCH2,
-    S_BEN,
+    S_FETCH0 = 6'd18, 
+    S_FETCH1 = 6'd33, 
+    S_FETCH2 = 6'd35,
+    S_BEN = 6'd32,
 
-    S_ADD,
-    S_AND,
-    S_NOT,
-    S_TRAP0,
-    S_TRAP1,
-    S_TRAP2,
-    S_LEA,
+    S_ADD = 6'd1,
+    S_AND = 6'd5,
+    S_NOT = 6'd9,
+    S_TRAP0 = 6'd15,
+    S_TRAP1 = 6'd28,
+    S_TRAP2 = 6'd30,
+    S_LEA = 6'd14,
 
     // related load instructions
-    S_LD0,  //b
-    S_LDR0, //c
-    S_LDI0,
-    S_LDI1,
-    S_LDI2,
-    S_LCOMMON0, //10
-    S_LCOMMON1, //11
+    S_LD0 = 6'd2,  //b
+    S_LDR0 = 6'd6, //c
+    S_LDI0 = 6'd10,
+    S_LDI1 = 6'd24,
+    S_LDI2 = 6'd26,
+    S_LCOMMON0 = 6'd25, //10
+    S_LCOMMON1 = 6'd27, //11
 
     // related store instructions
-    S_STI0,
-    S_STI1,
-    S_STI2,
-    S_STR0,
-    S_ST0,
-    S_SCOMMON0,
-    S_SCOMMON1,
+    S_STI0 = 6'd11,
+    S_STI1 = 6'd29,
+    S_STI2 = 6'd31,
+    S_STR0 = 6'd7,
+    S_ST0 = 6'd3,
+    S_SCOMMON0 = 6'd23,
+    S_SCOMMON1 = 6'd16,
 
 
-    S_JSR0,
-    S_JSR1_BRANCH,
-    S_JSR1_BASE,
+    S_JSR0 = 6'd4,
+    S_JSR1_BRANCH = 6'd21,
+    S_JSR1_BASE = 6'd20,
 
-    S_JMP,
+    S_JMP = 6'd12,
     
-    S_BR0,
-    S_BR1,
+    S_BR0 = 6'd0,
+    S_BR1 = 6'd22,
 
 
-    S_EXCEPTION
+    S_EXCEPTION = 6'd13
 } control_state_t;
 
 

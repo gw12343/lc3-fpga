@@ -19,7 +19,9 @@ module instruction_reg #(
     input logic [1:0] address_2_mux,
 
     input logic [DATA_SIZE-1:0] DATA_BUS_IN,
-    output logic [DATA_SIZE-1:0] IR_OUT,
+
+    output logic [3:0] OPCODE_OUT,
+    output logic [2:0] NZP_OUT,
     
     output logic signed [ADDRESS_SIZE-1:0] ADDRESS2MUX_OUT,
     output logic [DATA_SIZE-1:0] TRAP_VEC,
@@ -30,7 +32,14 @@ module instruction_reg #(
     output logic [2:0] IR_SR2, // [2:0]
 
     output logic SR2_MUX
-    );
+);
+
+
+logic [DATA_SIZE-1:0] IR_OUT;
+assign OPCODE_OUT = IR_OUT[DATA_SIZE-1:DATA_SIZE-4];
+assign NZP_OUT = IR_OUT[DATA_SIZE-5:DATA_SIZE-7];
+
+
 // size of various address segments from the current instruction
 localparam int unsigned ADDR2MUX_3_OUT_SZ = 11;
 localparam int unsigned ADDR2MUX_2_OUT_SZ = 9;

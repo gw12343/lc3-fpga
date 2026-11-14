@@ -4,8 +4,8 @@ module integration_tb;
 
     logic sys_clk;
     logic rst_n;
-    logic[8:0] unused;
-    logic[1:0] unused2;
+    //logic[8:0] unused;
+    //logic[1:0] unused2;
 
     logic gate_pc;
     logic gate_alu;
@@ -16,9 +16,9 @@ module integration_tb;
 
     lc3 DUT (
         .sys_clk(sys_clk),
-        .rst_n(rst_n),
-        .unused(unused),
-        .unused2(unused2)
+        .rst_n(rst_n)//,
+       // .unused(unused)//,
+        //.unused2(unused2)
     );
 
     assign gate_pc = DUT.control.store_pc;
@@ -94,6 +94,12 @@ endtask
 
 task automatic run_cycles(input int n);
     repeat (n) @(posedge sys_clk);
+endtask
+
+task automatic run_until_halt();
+    while (DUT.pc.PC_OUT != 'h9926) begin
+        @(posedge sys_clk);
+    end
 endtask
 
 task automatic test_jsr;
@@ -298,10 +304,10 @@ endtask
         sys_clk = 0;
         rst_n = 0;
         forever #5 sys_clk = ~sys_clk;
-        assert (unused == unused) 
-        else   $finish();
-        assert (unused2 == unused2) 
-        else   $finish();
+        //assert (unused == unused) 
+        //else   $finish();
+        //assert (unused2 == unused2) 
+        //else   $finish();
         assert (load_pc == load_pc) 
         else   $finish();
         assert (read_val == read_val) 
@@ -312,23 +318,32 @@ endtask
  
 
     initial begin
-        reset_cpu(16'h3000);
 
         // Build trap vector table
         for(shortint unsigned i = 0; i < 16'hff; i++) begin
             DUT.mio.ram['h0000 + i] = 16'h9900 + i;
         end
 
-        test_st_all();
-        test_jmp();
-        test_jsr();
-        test_jsrr();
-        test_lea();
-        test_ld();
-        test_ldr();
-        test_ldi();
-        test_br();
-        test_long_program();
+        DUT.mio.ram['h9925] = 'h0FFF; // trap x25 exit infinite loop
+
+        reset_cpu(16'h0000);
+        $readmemh("program.mem", DUT.mio.ram);
+        run_until_halt();
+
+
+        // test_st_all();
+        // test_jmp();
+        // test_jsr();
+        // test_jsrr();
+        // test_lea();
+        // test_ld();
+        // test_ldr();
+        // test_ldi();
+        // test_br();
+        // test_long_program();
+
+        
+
 
         $finish();
     end

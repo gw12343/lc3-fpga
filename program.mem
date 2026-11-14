@@ -1,0 +1,21 @@
+2207  // x0000: LD   R1, PTR        ; R1 = x3070
+E407  // x0001: LEA  R2, STR        ; R2 = address of string
+6080  // x0002: LOOP: LDR R0, R2, #0
+0403  // x0003: BRz  DONE
+7040  // x0004: STR  R0, R1, #0     ; write char to x3070
+14A1  // x0005: ADD  R2, R2, #1     ; src++
+0FFB  // x0006: BRnzp LOOP
+F025  // x0007: DONE: TRAP x25 (HALT)
+3070  // x0008: PTR: .FILL x3070
+0048  // x0009: 'H'
+0045  // x000A: 'E'
+004C  // x000B: 'L'
+004C  // x000C: 'L'
+004F  // x000D: 'O'
+0020  // x000E: ' '
+0057  // x000F: 'W'
+004F  // x0010: 'O'
+0052  // x0011: 'R'
+004C  // x0012: 'L'
+0044  // x0013: 'D'
+0000  // x0014: null terminator

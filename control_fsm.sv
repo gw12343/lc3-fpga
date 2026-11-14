@@ -107,6 +107,43 @@ typedef enum {
     SOURCE_IR11_9
 } alu_source_range_t;
 
+typedef enum {
+    PC_NO_OFF,
+    PC_OFF9,
+    BASE_OFF6,
+    TRAP_VEC
+} mar_load_source_t;
+
+
+function void load_mar(mar_load_source_t src);
+    ctrl_signal.load_mar = 1;
+    ctrl_signal.store_mar_mux = 1; 
+
+    unique case(src)
+        PC_NO_OFF: begin
+            //pc no off
+            ctrl_signal.load_mar = 1;
+            ctrl_signal.store_pc = 1;  
+        end
+        PC_OFF9: begin
+            // 9 bit sext + pc
+            ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
+            ctrl_signal.addr1_mux = 1'b0;   // pc
+            ctrl_signal.mar_mux = 1'b1;
+        end
+        BASE_OFF6: begin
+            // 6 bit sext + B
+            ctrl_signal.addr2_mux = 2'b01;  // 6 bit sext
+            ctrl_signal.addr1_mux = 1'b1;   // B
+            ctrl_signal.mar_mux = 1'b1;     // 6 bit sext + B
+            ctrl_signal.sr1_mux = 2'b01;
+        end
+        TRAP_VEC: begin
+            // select ZEXT(IR[7:0])
+            ctrl_signal.mar_mux = 0; 
+        end
+    endcase
+endfunction
 
 function void read_mem;
     // MDR <== M[MAR]
@@ -115,10 +152,14 @@ function void read_mem;
     ctrl_signal.mem_w_nr = 0; // read
 endfunction
 
+function void write_mem;
+    ctrl_signal.mem_io_en = 1;
+    ctrl_signal.mem_w_nr = 1;
+endfunction
+
 function void update_flags;
     ctrl_signal.load_flags = 1;
 endfunction
-
 
 function void alu_op(alu_op_k op, alu_source_range_t sr1, alu_dest_t dest, logic up_flags);
     // Select correct load location
@@ -161,9 +202,7 @@ always_comb begin
         S_ADD: alu_op(OP_ADD, SOURCE_IR8_6, DEST_REG, 1);
         S_NOT: alu_op(OP_NOT, SOURCE_IR8_6, DEST_REG, 1);
         S_TRAP0: begin
-            ctrl_signal.mar_mux = 0; // select ZEXT(IR[7:0])
-            ctrl_signal.store_mar_mux = 1;
-            ctrl_signal.load_mar = 1;
+            load_mar(TRAP_VEC);
         end
         S_TRAP1: begin
             ctrl_signal.load_reg = 1;
@@ -178,22 +217,17 @@ always_comb begin
             ctrl_signal.pc_mux = 2'b01;
         end
         S_LEA: begin
+            // Store address in register 
             ctrl_signal.load_reg = 1;
             ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
             ctrl_signal.addr1_mux = 1'b0;   // pc
             ctrl_signal.mar_mux = 1'b1;
 
             ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
-
             update_flags();
         end
-        S_LD0: begin
-            ctrl_signal.load_mar = 1;
-            ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
-            ctrl_signal.addr1_mux = 1'b0;   // pc
-            ctrl_signal.mar_mux = 1'b1;
-            ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
-        end
+        S_LD0: load_mar(PC_OFF9);
+        S_LDI0, S_STI0: load_mar(PC_OFF9);
         S_LCOMMON0: read_mem();
         S_LCOMMON1: begin
             ctrl_signal.load_reg = 1;
@@ -201,39 +235,16 @@ always_comb begin
             update_flags();
         end
 
-        S_LDR0, S_STR0: begin
-            ctrl_signal.load_mar = 1;
-            ctrl_signal.store_mar_mux = 1; 
-
-            ctrl_signal.addr2_mux = 2'b01;  // 6 bit sext
-            ctrl_signal.addr1_mux = 1'b1;   // B
-            ctrl_signal.mar_mux = 1'b1;     // 6 bit sext + B
-
-            ctrl_signal.sr1_mux = 2'b01;
-        end
-        S_LDI0, S_STI0: begin
-            ctrl_signal.load_mar = 1;
-            ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
-            ctrl_signal.addr1_mux = 1'b0;   // pc
-            ctrl_signal.mar_mux = 1'b1;
-            ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
-        end
+        S_LDR0, S_STR0: load_mar(BASE_OFF6);
         S_LDI1, S_STI1: read_mem();
         S_LDI2, S_STI2: begin
             ctrl_signal.store_mdr = 1;
             ctrl_signal.load_mar = 1;
         end
-        S_ST0: begin
-            ctrl_signal.load_mar = 1;
-            ctrl_signal.addr2_mux = 2'b10;  // 9 bit sext
-            ctrl_signal.addr1_mux = 1'b0;   // pc
-            ctrl_signal.mar_mux = 1'b1;
-            ctrl_signal.store_mar_mux = 1; // 9 bit sext + pc
-        end
+        S_ST0: load_mar(PC_OFF9);
         S_SCOMMON0: alu_op(OP_PASS_A, SOURCE_IR11_9, DEST_MDR, 0);
         S_SCOMMON1: begin
-            ctrl_signal.mem_io_en = 1;
-            ctrl_signal.mem_w_nr = 1;
+            write_mem();
         end
         S_JSR0: begin
             ctrl_signal.load_reg = 1;
@@ -246,9 +257,7 @@ always_comb begin
             ctrl_signal.addr1_mux = 0;     // PC
             ctrl_signal.pc_mux = 2'b10;
         end
-        S_JMP, S_JSR1_BASE: begin
-            alu_op(OP_PASS_A, SOURCE_IR8_6, DEST_PC, 0);
-        end
+        S_JMP, S_JSR1_BASE: alu_op(OP_PASS_A, SOURCE_IR8_6, DEST_PC, 0);
         S_BR0, S_EXCEPTION: ctrl_signal = '0;
         S_BR1: begin
             ctrl_signal.load_pc = 1;
