@@ -11,10 +11,7 @@ module lc3
 )
 (
     input logic sys_clk,
-    input logic rst_n//,
-
-   // output logic[8:0] unused//,
-   // output logic[1:0] unused2
+    input logic rst_n
 );
 
 // ============================ Interconnect Signals =============================
@@ -27,17 +24,36 @@ module lc3
 
 control_interface_t control;
 
+// Ensure no bus contention.
+logic[3:0] bus_drivers;
+always_comb begin
+    bus_drivers = {
+        control.store_alu,
+        control.store_mar_mux,
+        control.store_mdr,
+        control.store_pc
+    };
+
+    // Only assert when in valid state
+    assert (!rst_n || $isunknown(bus_drivers) || $onehot0(bus_drivers)) 
+    else $error(
+        "bus contention: {store_alu, store_mar_mux, store_mdr, store_pc} = %04b", 
+        bus_drivers
+    );
+end
+
+
 // Signals buffered to bus
 logic signed [BUS_WIDTH-1:0] alu_value;
-//logic [BUS_WIDTH-1:BUS_WIDTH-7] ir_value; // contains opcode and next 3 nzp bits
+
+// Segments from IR
 logic [3:0] opcode;
 logic [2:0] nzp;
+
 
 logic [ADDRESS_SIZE-1:0] pc_value;
 logic [ADDRESS_SIZE-1:0] mar_mux_out;
 logic[BUS_WIDTH-1:0] mdr_val;
-
-//assign unused = ir_value[8:0];
 
 // Misc Signals
 logic SR2_MUX;
@@ -124,10 +140,6 @@ always_comb begin
 end
 
 
-// ==================================== Modules ====================================
-
-
-
 `ifdef VERILATOR
     // Multiplex bus instead of use tristate buffers for simulation
     always_comb begin
@@ -160,6 +172,7 @@ end
     );
 `endif
 
+// ==================================== Modules ====================================
 
 control_fsm control_fsm (
     .sys_clk    (sys_clk),

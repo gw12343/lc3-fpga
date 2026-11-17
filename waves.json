@@ -1,0 +1,84 @@
+{
+  "extensionVersion": "1.6.1",
+  "fileName": "/home/gabe/lc3-fpga/waves.vcd",
+  "markerTime": null,
+  "altMarkerTime": null,
+  "displayTimeUnit": "ps",
+  "selectedSignal": {
+    "name": "TOP.memory_tb.ready",
+    "msb": -1,
+    "lsb": -1
+  },
+  "zoomRatio": 33.1484124599359,
+  "scrollLeft": 1,
+  "defaultPixelTime": 100,
+  "displayedSignals": [
+    {
+      "dataType": "netlist-variable",
+      "netlistId": 2,
+      "name": "sys_clk",
+      "scopePath": [
+        "TOP",
+        "memory_tb"
+      ],
+      "numberFormat": "binary",
+      "colorIndex": 0,
+      "rowHeight": 1,
+      "verticalScale": 1,
+      "nameType": "fullPath",
+      "customName": "sys_clk",
+      "renderType": "binary",
+      "valueLinkEnable": false
+    },
+    {
+      "dataType": "netlist-variable",
+      "netlistId": 3,
+      "name": "rst_n",
+      "scopePath": [
+        "TOP",
+        "memory_tb"
+      ],
+      "numberFormat": "binary",
+      "colorIndex": 0,
+      "rowHeight": 1,
+      "verticalScale": 1,
+      "nameType": "fullPath",
+      "customName": "rst_n",
+      "renderType": "binary",
+      "valueLinkEnable": false
+    },
+    {
+      "dataType": "netlist-variable",
+      "netlistId": 0,
+      "name": "current_state_vec",
+      "scopePath": [
+        "TOP"
+      ],
+      "numberFormat": "ascii",
+      "colorIndex": 0,
+      "rowHeight": 1,
+      "verticalScale": 1,
+      "nameType": "fullPath",
+      "customName": "current_state_vec",
+      "renderType": "multiBit",
+      "valueLinkEnable": false
+    },
+    {
+      "dataType": "netlist-variable",
+      "netlistId": 9,
+      "name": "ready",
+      "scopePath": [
+        "TOP",
+        "memory_tb"
+      ],
+      "numberFormat": "binary",
+      "colorIndex": 0,
+      "rowHeight": 1,
+      "verticalScale": 1,
+      "nameType": "fullPath",
+      "customName": "ready",
+      "renderType": "binary",
+      "valueLinkEnable": false
+    }
+  ]
+}

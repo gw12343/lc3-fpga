@@ -1,0 +1,75 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Wed Nov 11 04:08:02 2026
+[*]
+[dumpfile] "(null)"
+[savefile] "/home/gabe/lc3-fpga/waves.gtkw"
+[timestart] 0
+[size] 1330 722
+[pos] -1 -1
+*-4.642318 58 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.integration_tb.
+[treeopen] TOP.integration_tb.DUT.
+[treeopen] TOP.integration_tb.DUT.control_fsm.
+[treeopen] TOP.integration_tb.DUT.rb.
+[sst_width] 276
+[signals_width] 222
+[sst_expanded] 1
+[sst_vpaned_height] 200
+@28
+[color] 3
+TOP.integration_tb.sys_clk
+[color] 3
+TOP.integration_tb.rst_n
+@22
+[color] 6
+TOP.integration_tb.DUT.control_fsm.curr[5:0]
+TOP.integration_tb.DUT.pc.PC_OUT[15:0]
+@200
+-
+@22
+TOP.integration_tb.DUT.rb.bank[0][15:0]
+TOP.integration_tb.DUT.rb.bank[1][15:0]
+TOP.integration_tb.DUT.rb.bank[2][15:0]
+TOP.integration_tb.DUT.rb.bank[3][15:0]
+TOP.integration_tb.DUT.rb.bank[4][15:0]
+TOP.integration_tb.DUT.rb.bank[5][15:0]
+TOP.integration_tb.DUT.rb.bank[6][15:0]
+TOP.integration_tb.DUT.rb.bank[7][15:0]
+@200
+-
+@22
+TOP.integration_tb.DUT.mio.ram_out[15:0]
+TOP.integration_tb.DUT.mio.mdr_mux_out[15:0]
+@28
+TOP.integration_tb.DUT.mio.ready
+@22
+TOP.integration_tb.DUT.mio.mar_reg[15:0]
+@28
+TOP.integration_tb.DUT.mio.mio_enable
+@22
+TOP.integration_tb.DUT.ir.IR_OUT[15:0]
+@200
+-
+@22
+TOP.integration_tb.DUT.bus[15:0]
+@200
+-
+-
+-CONTROL SIGNALS:
+@28
+TOP.load_mar
+TOP.store_pc
+TOP.pc_mux[1:0]
+TOP.load_pc
+@200
+-
+@28
+TOP.load_mdr
+@22
+TOP.integration_tb.DUT.mdr_val[15:0]
+@29
+TOP.store_mdr
+[pattern_trace] 1
+[pattern_trace] 0

@@ -319,15 +319,11 @@ endtask
 
     initial begin
 
-        // Build trap vector table
-        for(shortint unsigned i = 0; i < 16'hff; i++) begin
-            DUT.mio.ram['h0000 + i] = 16'h9900 + i;
-        end
-
         DUT.mio.ram['h9925] = 'h0FFF; // trap x25 exit infinite loop
 
-        reset_cpu(16'h0000);
-        $readmemh("program.mem", DUT.mio.ram);
+        reset_cpu(16'h3000);
+        $readmemh("mem/trap_vector_table.mem", DUT.mio.ram, '0);
+        $readmemh("mem/program.mem", DUT.mio.ram, 'h3000);
         run_until_halt();
 
 
